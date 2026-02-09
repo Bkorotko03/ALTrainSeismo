@@ -1,0 +1,1 @@
+This is a todo list for the project. Please leave initials and such for completion or requests.
