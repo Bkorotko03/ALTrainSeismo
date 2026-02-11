@@ -35,8 +35,7 @@
               "title": "Parts List"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -211,10 +210,11 @@
       "bases:Create new base": false
     }
   },
-  "active": "086e162593d9672e",
+  "active": "d5d87b7350b8bcc0",
   "lastOpenFiles": [
-    "AL ToDo.md",
     "Parts List.md",
+    "AL ToDo.md",
+    "DailyNotes.md",
     "Welcome.md"
   ]
 }
