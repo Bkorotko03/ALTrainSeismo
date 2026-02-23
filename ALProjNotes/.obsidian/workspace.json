@@ -88,13 +88,11 @@
               "title": "Bookmarks"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "6d67e9cbac26c73c",
@@ -212,9 +210,9 @@
   },
   "active": "d5d87b7350b8bcc0",
   "lastOpenFiles": [
+    "DailyNotes.md",
     "Parts List.md",
     "AL ToDo.md",
-    "DailyNotes.md",
     "Welcome.md"
   ]
 }
