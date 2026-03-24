@@ -8,6 +8,7 @@ This is a todo list for the project. Please leave initials and such for completi
 - [x] figure out how to take in analog voltage on arduino and output to sd card
 - [ ] update parts list
 - [ ] set concrete timelines
+- [ ] oh yeah we should make our docs better and have code comments
 
 ### Making the geophones
 - [ ] makes holes in the jars
