@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Parts List.md",
+                "file": "AL ToDo.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Parts List"
+              "title": "AL ToDo"
             }
           }
         ],
@@ -211,8 +211,8 @@
   },
   "active": "086e162593d9672e",
   "lastOpenFiles": [
-    "Abstract.md",
     "Parts List.md",
+    "Abstract.md",
     "AL ToDo.md",
     "DailyNotes.md",
     "Welcome.md"
