@@ -65,6 +65,7 @@ void setup() { // this stuff runs only once
       }; // hold in loop, dont run rest of code
   }
   Serial.println("SD card initialized.");
+  Serial.println("Waiting for GPS fix...");
 
 }
 
