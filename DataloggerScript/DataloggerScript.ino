@@ -132,7 +132,7 @@ void loop() { // this thing runs constantly from startup until power loss, want 
       uint32_t elapsed = millis() - gpsSyncMillis;
 
       uint32_t totalSeconds = gpsSyncHour * 3600UL + gpsSyncMinute * 60UL + gpsSyncSecond + (elapsed / 1000); // convert GPS time into total seconds
-      float elapsedSeconds = gpsSyncHour * 3600UL + gpsSyncMinute * 60UL + gpsSyncSecond + (elapsed / 1000); // want this to output in csv as a float
+      float elapsedSeconds = gpsSyncHour * 3600.0f + gpsSyncMinute * 60.0f + gpsSyncSecond + (elapsed / 1000.0f); // want this to output in csv as a float
 
       // now convert new time back to hh mm ss msmsms
       uint16_t ms = elapsed % 1000;
