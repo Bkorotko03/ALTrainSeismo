@@ -7,9 +7,14 @@
 #include <SD.h> // want to switch to better SD library for full timecode filenames
 #include <Adafruit_GPS.h>
 #include <SoftwareSerial.h>
+#include <Arduino_Modulino.h>
 
 #define GPSECHO false // echos the GPS data to the serial output
 #define BUFFER_SIZE 512 // size of buffer for writes to SD card
+
+ModulinoBuzzer buzzer; // initialize the buzzer object
+int soundf = 440; // sound frequency
+int soundd = 200; // sound duration
 
 int sensorValue = 0; // initialize sensor value as 0
 const int chipSelect = 10; // pick chip select pin to be 10, this is the case for dedicated spi headers
@@ -32,15 +37,25 @@ uint8_t gpsSyncSecond = 0;
 
 int lastGPSSec = -1; // for sync mentioned above
 
+bool gpsfixbool = false; // initial gps fix test
+
 // initialize serial for GPS
 SoftwareSerial mySerial(8, 7);
 Adafruit_GPS GPS(&mySerial);
 
 void setup() { // this stuff runs only once
+// ------------------------------------ Buzzer -----------------------
+  // Some notes on the audio error codes:
+  // One beep is good, continuous beeps are really mf bad
+  Modulino.begin();
+  buzzer.begin();
+
 // ------------------------------------------- GPS and Serial --------------------------------------------------------
   Serial.begin(115200); // initialize serial 115200 baud
   delay(2000);
   Serial.println("Initializing Adafruit GPS Shield");
+  buzzer.tone(soundf,soundd);
+  delay(2*soundd);
 
   GPS.begin(9600); // initialize link to GPS module at 9600 baud
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA); // request minimum recommended data and fix data (altitude and things)
@@ -50,22 +65,32 @@ void setup() { // this stuff runs only once
   delay(1000);
 
   Serial.println("GPS initialized?"); // there should be some conditional here to check if this is right
+  buzzer.tone(soundf,soundd);
+  delay(soundd);
+  delay(1000);
 
 // ------------------------------------------- SD Card----------------------
   Serial.println("Initializing SD card...");
+  buzzer.tone(soundf,soundd);
+  delay(soundd);
+  delay(1000);
 
   if (!SD.begin(chipSelect)) {
-    Serial.println(" SD card initialization failed."); // if cant select chip, cry (an audio thing could be a better alarm, the arduinos all come with it)
+    Serial.println(" SD card initialization failed."); // if cant select chip, cry
       while (1) {
         Serial.println("SD Card Broken!!! :(");
         digitalWrite(ledPin, HIGH);
-        delay(100);
+        buzzer.tone(soundf,soundd);
+        delay(2*soundd);
         digitalWrite(ledPin, LOW);
-        delay(100);
+        buzzer.tone(soundf,soundd);
+        delay(2*soundd);
       }; // hold in loop, dont run rest of code
   }
   Serial.println("SD card initialized.");
   Serial.println("Waiting for GPS fix...");
+  buzzer.tone(soundf,soundd);
+  delay(2*soundd);
 
 }
 
@@ -88,6 +113,11 @@ void loop() { // this thing runs constantly from startup until power loss, want 
 
       Serial.println("GPS fixed"); // what a surprise
 
+      if (gpsfixbool = false) {
+        buzzer.tone(soundf,soundd);
+        delay(soundd);
+      }
+
       // begin time sync for the more frequent measurements
       if (GPS.seconds != lastGPSSec) {
         lastGPSSec = GPS.seconds;
@@ -102,6 +132,7 @@ void loop() { // this thing runs constantly from startup until power loss, want 
       uint32_t elapsed = millis() - gpsSyncMillis;
 
       uint32_t totalSeconds = gpsSyncHour * 3600UL + gpsSyncMinute * 60UL + gpsSyncSecond + (elapsed / 1000); // convert GPS time into total seconds
+      float elapsedSeconds = gpsSyncHour * 3600UL + gpsSyncMinute * 60UL + gpsSyncSecond + (elapsed / 1000); // want this to output in csv as a float
 
       // now convert new time back to hh mm ss msmsms
       uint16_t ms = elapsed % 1000;
@@ -114,31 +145,38 @@ void loop() { // this thing runs constantly from startup until power loss, want 
       if (!fileInitialized && GPS.year >= 0 && GPS.year <= 2050) { // check if file not initialized and sanity check that the GPS data makes sense
         snprintf(filename,sizeof(filename), // the filename based on timecode
         "%02d%02d%02d%02d.csv", // limited to 8 characters before extension because of bad SD card library
-        GPS.year,GPS.month,GPS.day,GPS.seconds);
+        GPS.year,GPS.month,GPS.day,GPS.hour);
         
         Serial.print("Creating file: ");
         Serial.println(filename);
+        buzzer.tone(soundf,soundd);
+        delay(soundd);
 
         myFile = SD.open(filename, FILE_WRITE); // open / create file for write
 
         if (!myFile) {
           Serial.println("File creating failed.");
-          return;
+          while(1) {
+            buzzer.tone(soundf,soundd);
+            delay(2*soundd);
+          }
         }
 
-        myFile.println("timecode,lat,lat_dir,lon,lon_dir,sensor"); // make CSV headers and push to the file
+        myFile.println("timecode,seconds,lat,lat_dir,lon,lon_dir,sensor"); // make CSV headers and push to the file
         myFile.flush();
 
         fileInitialized = true; // set bool
 
         Serial.println("File initialized.");
+        buzzer.tone(soundf,soundd);
+        delay(soundd);
       }
 
       if (bufferIndex < BUFFER_SIZE - 120) { // ensure we don't overflow buffer
         int len = snprintf(&buffer[bufferIndex], // print below things to buffer
                    BUFFER_SIZE - bufferIndex,
-                   "%02d%02d%02d_%02d%02d%02d_%03d,%.4f,%c,%.4f,%c,%d\n", // format of data to print
-                   GPS.year, GPS.month, GPS.day, hour, minute, second, ms, GPS.latitude, GPS.lat, GPS.longitude, GPS.lon, sensorValue); // values to write
+                   "%02d%02d%02d_%02d%02d%02d_%03d,%.3f,%.4f,%c,%.4f,%c,%d\n", // format of data to print
+                   GPS.year, GPS.month, GPS.day, hour, minute, second, ms, elapsedSeconds, GPS.latitude, GPS.lat, GPS.longitude, GPS.lon, sensorValue); // values to write
         
         // Serial.println("Wrote to buffer"); // debug
 
