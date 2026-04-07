@@ -1,2 +1,5 @@
 ./testsAndSuch/.ipynb_checkpoints/
 testsAndSuch/csvs/
+
+# macOS
+.DS_Store
