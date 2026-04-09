@@ -142,7 +142,7 @@ void loop() { // this thing runs constantly from startup until power loss, want 
 
       int sensorValue = analogRead(A0); // read from pin A0 (still need to figure out how to convert them integers to a real voltage measurement)
 
-      if (!fileInitialized && GPS.year >= 0 && GPS.year <= 2050) { // check if file not initialized and sanity check that the GPS data makes sense
+      if (!fileInitialized && GPS.year >= 25 && GPS.year <= 27) { // check if file not initialized and sanity check that the GPS data makes sense
         snprintf(filename,sizeof(filename), // the filename based on timecode
         "%02d%02d%02d%02d.csv", // limited to 8 characters before extension because of bad SD card library
         GPS.year,GPS.month,GPS.day,GPS.hour);
