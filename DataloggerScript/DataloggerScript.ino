@@ -50,6 +50,8 @@ void setup() { // this stuff runs only once
   Modulino.begin();
   buzzer.begin();
 
+  analogReadResolution(14); // 14 bit read resolution, to convert to volts mult by 5/16383
+
 // ------------------------------------------- GPS and Serial --------------------------------------------------------
   Serial.begin(115200); // initialize serial 115200 baud
   delay(2000);
