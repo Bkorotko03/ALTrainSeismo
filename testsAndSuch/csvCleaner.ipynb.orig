@@ -2,7 +2,11 @@
  "cells": [
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 1,
+=======
    "execution_count": 2,
+>>>>>>> main
    "id": "1e94c5bd",
    "metadata": {},
    "outputs": [],
@@ -13,7 +17,11 @@
   },
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 2,
+=======
    "execution_count": 3,
+>>>>>>> main
    "id": "e09a775a",
    "metadata": {},
    "outputs": [],
@@ -38,7 +46,11 @@
   },
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 3,
+=======
    "execution_count": null,
+>>>>>>> main
    "id": "4a0c53a7",
    "metadata": {},
    "outputs": [],
@@ -50,7 +62,24 @@
     "\n",
     "# import clicker data, unfortunately this does not exists on the repo :(\n",
     "# events every 200 seconds, should give enough room for both event and background\n",
+<<<<<<< HEAD
+    "clickerdata = pd.read_csv('./output/platform_run.csv')\n",
+    "\n",
+    "# remove first and last 10 seconds\n",
+    "time_min = voltagedata['seconds'].min()\n",
+    "time_max = voltagedata['seconds'].max()\n",
+    "\n",
+    "voltagedata = voltagedata[\n",
+    "    (voltagedata['seconds'] >= time_min + 10) &\n",
+    "    (voltagedata['seconds'] <= time_max - 10)\n",
+    "].reset_index(drop=True)\n",
+    "\n",
+    "# remove these from the clicker data as well\n",
+    "time_min_c = clickerdata['seconds'].min()\n",
+    "time_max_c = clickerdata['seconds'].max()\n",
+=======
     "clickerdata = pd.read_csv('./output/clickerFAKE.csv')\n",
+>>>>>>> main
     "\n",
     "# now want to control the windowing params around events\n",
     "window_half_width = 20 # enforce that this is seconds somehow\n",
@@ -66,7 +95,11 @@
   },
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 4,
+=======
    "execution_count": 33,
+>>>>>>> main
    "id": "302419fb",
    "metadata": {},
    "outputs": [
@@ -104,6 +137,60 @@
        "  <tbody>\n",
        "    <tr>\n",
        "      <th>0</th>\n",
+<<<<<<< HEAD
+       "      <td>260407_224240_000</td>\n",
+       "      <td>81760.000</td>\n",
+       "      <td>4200.0576</td>\n",
+       "      <td>N</td>\n",
+       "      <td>8739.6758</td>\n",
+       "      <td>W</td>\n",
+       "      <td>110</td>\n",
+       "      <td>0.033571</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>260407_224240_100</td>\n",
+       "      <td>81760.102</td>\n",
+       "      <td>4200.0576</td>\n",
+       "      <td>N</td>\n",
+       "      <td>8739.6758</td>\n",
+       "      <td>W</td>\n",
+       "      <td>108</td>\n",
+       "      <td>0.032961</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>260407_224240_200</td>\n",
+       "      <td>81760.203</td>\n",
+       "      <td>4200.0576</td>\n",
+       "      <td>N</td>\n",
+       "      <td>8739.6758</td>\n",
+       "      <td>W</td>\n",
+       "      <td>109</td>\n",
+       "      <td>0.033266</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>260407_224240_300</td>\n",
+       "      <td>81760.297</td>\n",
+       "      <td>4200.0576</td>\n",
+       "      <td>N</td>\n",
+       "      <td>8739.6758</td>\n",
+       "      <td>W</td>\n",
+       "      <td>107</td>\n",
+       "      <td>0.032656</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>260407_224240_400</td>\n",
+       "      <td>81760.398</td>\n",
+       "      <td>4200.0576</td>\n",
+       "      <td>N</td>\n",
+       "      <td>8739.6758</td>\n",
+       "      <td>W</td>\n",
+       "      <td>108</td>\n",
+       "      <td>0.032961</td>\n",
+=======
        "      <td>260407_224230_000</td>\n",
        "      <td>81750.000</td>\n",
        "      <td>4200.0562</td>\n",
@@ -156,6 +243,7 @@
        "      <td>W</td>\n",
        "      <td>103</td>\n",
        "      <td>0.031435</td>\n",
+>>>>>>> main
        "    </tr>\n",
        "    <tr>\n",
        "      <th>...</th>\n",
@@ -169,13 +257,28 @@
        "      <td>...</td>\n",
        "    </tr>\n",
        "    <tr>\n",
+<<<<<<< HEAD
+       "      <th>10400</th>\n",
+       "      <td>260407_230000_000</td>\n",
+       "      <td>82800.000</td>\n",
+=======
        "      <th>10593</th>\n",
        "      <td>260407_230010_000</td>\n",
        "      <td>82810.000</td>\n",
+>>>>>>> main
        "      <td>4200.0562</td>\n",
        "      <td>N</td>\n",
        "      <td>8739.6748</td>\n",
        "      <td>W</td>\n",
+<<<<<<< HEAD
+       "      <td>117</td>\n",
+       "      <td>0.035708</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10401</th>\n",
+       "      <td>260407_230000_100</td>\n",
+       "      <td>82800.102</td>\n",
+=======
        "      <td>65</td>\n",
        "      <td>0.019838</td>\n",
        "    </tr>\n",
@@ -183,10 +286,20 @@
        "      <th>10594</th>\n",
        "      <td>260407_230010_100</td>\n",
        "      <td>82810.102</td>\n",
+>>>>>>> main
        "      <td>4200.0562</td>\n",
        "      <td>N</td>\n",
        "      <td>8739.6748</td>\n",
        "      <td>W</td>\n",
+<<<<<<< HEAD
+       "      <td>120</td>\n",
+       "      <td>0.036623</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10402</th>\n",
+       "      <td>260407_230000_200</td>\n",
+       "      <td>82800.203</td>\n",
+=======
        "      <td>58</td>\n",
        "      <td>0.017701</td>\n",
        "    </tr>\n",
@@ -194,10 +307,20 @@
        "      <th>10595</th>\n",
        "      <td>260407_230010_200</td>\n",
        "      <td>82810.203</td>\n",
+>>>>>>> main
        "      <td>4200.0562</td>\n",
        "      <td>N</td>\n",
        "      <td>8739.6748</td>\n",
        "      <td>W</td>\n",
+<<<<<<< HEAD
+       "      <td>119</td>\n",
+       "      <td>0.036318</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10403</th>\n",
+       "      <td>260407_230000_300</td>\n",
+       "      <td>82800.297</td>\n",
+=======
        "      <td>83</td>\n",
        "      <td>0.025331</td>\n",
        "    </tr>\n",
@@ -205,10 +328,20 @@
        "      <th>10596</th>\n",
        "      <td>260407_230010_300</td>\n",
        "      <td>82810.297</td>\n",
+>>>>>>> main
        "      <td>4200.0562</td>\n",
        "      <td>N</td>\n",
        "      <td>8739.6748</td>\n",
        "      <td>W</td>\n",
+<<<<<<< HEAD
+       "      <td>118</td>\n",
+       "      <td>0.036013</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10404</th>\n",
+       "      <td>260407_230000_400</td>\n",
+       "      <td>82800.398</td>\n",
+=======
        "      <td>110</td>\n",
        "      <td>0.033571</td>\n",
        "    </tr>\n",
@@ -216,6 +349,7 @@
        "      <th>10597</th>\n",
        "      <td>260407_230010_400</td>\n",
        "      <td>82810.398</td>\n",
+>>>>>>> main
        "      <td>4200.0562</td>\n",
        "      <td>N</td>\n",
        "      <td>8739.6748</td>\n",
@@ -225,11 +359,46 @@
        "    </tr>\n",
        "  </tbody>\n",
        "</table>\n",
+<<<<<<< HEAD
+       "<p>10405 rows × 8 columns</p>\n",
+=======
        "<p>10598 rows × 8 columns</p>\n",
+>>>>>>> main
        "</div>"
       ],
       "text/plain": [
        "                timecode    seconds        lat lat_dir        lon lon_dir  \\\n",
+<<<<<<< HEAD
+       "0      260407_224240_000  81760.000  4200.0576       N  8739.6758       W   \n",
+       "1      260407_224240_100  81760.102  4200.0576       N  8739.6758       W   \n",
+       "2      260407_224240_200  81760.203  4200.0576       N  8739.6758       W   \n",
+       "3      260407_224240_300  81760.297  4200.0576       N  8739.6758       W   \n",
+       "4      260407_224240_400  81760.398  4200.0576       N  8739.6758       W   \n",
+       "...                  ...        ...        ...     ...        ...     ...   \n",
+       "10400  260407_230000_000  82800.000  4200.0562       N  8739.6748       W   \n",
+       "10401  260407_230000_100  82800.102  4200.0562       N  8739.6748       W   \n",
+       "10402  260407_230000_200  82800.203  4200.0562       N  8739.6748       W   \n",
+       "10403  260407_230000_300  82800.297  4200.0562       N  8739.6748       W   \n",
+       "10404  260407_230000_400  82800.398  4200.0562       N  8739.6748       W   \n",
+       "\n",
+       "       sensor   voltage  \n",
+       "0         110  0.033571  \n",
+       "1         108  0.032961  \n",
+       "2         109  0.033266  \n",
+       "3         107  0.032656  \n",
+       "4         108  0.032961  \n",
+       "...       ...       ...  \n",
+       "10400     117  0.035708  \n",
+       "10401     120  0.036623  \n",
+       "10402     119  0.036318  \n",
+       "10403     118  0.036013  \n",
+       "10404     118  0.036013  \n",
+       "\n",
+       "[10405 rows x 8 columns]"
+      ]
+     },
+     "execution_count": 4,
+=======
        "0      260407_224230_000  81750.000  4200.0562       N  8739.6826       W   \n",
        "1      260407_224230_426  81750.430  4200.0562       N  8739.6826       W   \n",
        "2      260407_224230_525  81750.523  4200.0562       N  8739.6826       W   \n",
@@ -259,6 +428,7 @@
       ]
      },
      "execution_count": 33,
+>>>>>>> main
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -269,7 +439,11 @@
   },
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 5,
+=======
    "execution_count": 34,
+>>>>>>> main
    "id": "371967ee",
    "metadata": {},
    "outputs": [],
@@ -279,7 +453,11 @@
   },
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 6,
+=======
    "execution_count": 22,
+>>>>>>> main
    "id": "d479ad15",
    "metadata": {},
    "outputs": [
@@ -287,8 +465,13 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
+<<<<<<< HEAD
+      "voltage csv first time was 81760.0, now is 0.0\n",
+      "clicker csv first time was 2573.8, now is 0.0\n"
+=======
       "voltage csv first time was 81750.0, now is 0.0\n",
       "clicker csv first time was 0, now is 0\n"
+>>>>>>> main
      ]
     }
    ],
@@ -318,17 +501,29 @@
   },
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 7,
+=======
    "execution_count": 27,
+>>>>>>> main
    "id": "776aea2a",
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
+<<<<<<< HEAD
+       "array([  115,   641,  1059,  1202,  1738,  2047,  4011,  5116,  5205,\n",
+       "        5650,  6894,  9381,  9652,  9776, 10151])"
+      ]
+     },
+     "execution_count": 7,
+=======
        "array([ 994, 2994, 4994, 6993, 8992])"
       ]
      },
      "execution_count": 27,
+>>>>>>> main
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -346,7 +541,11 @@
   },
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 8,
+=======
    "execution_count": 28,
+>>>>>>> main
    "id": "4c968795",
    "metadata": {},
    "outputs": [],
@@ -360,7 +559,11 @@
   },
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 9,
+=======
    "execution_count": 30,
+>>>>>>> main
    "id": "376e7b4e",
    "metadata": {},
    "outputs": [],
@@ -371,7 +574,11 @@
   },
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 10,
+=======
    "execution_count": 31,
+>>>>>>> main
    "id": "75a8cf59",
    "metadata": {},
    "outputs": [
@@ -379,8 +586,13 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
+<<<<<<< HEAD
+      "eventWIndex: [[0, 315], [441, 841], [859, 1402], [1538, 2247], [3811, 4211], [4916, 5405], [5450, 5850], [6694, 7094], [9181, 10351]]\n",
+      "noiseWIndex: [[316, 440], [842, 858], [1403, 1537], [2248, 3810], [4212, 4915], [5406, 5449], [5851, 6693], [7095, 9180], [10352, 10404]]\n"
+=======
       "eventWIndex: [[494, 1494], [2494, 3494], [4494, 5494], [6493, 7493], [8492, 9492]]\n",
       "noiseWIndex: [[0, 493], [1495, 2493], [3495, 4493], [5495, 6492], [7494, 8491], [9493, 10597]]\n"
+>>>>>>> main
      ]
     }
    ],
@@ -424,7 +636,11 @@
   },
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 11,
+=======
    "execution_count": 35,
+>>>>>>> main
    "id": "a8da4b9f",
    "metadata": {},
    "outputs": [],
@@ -449,7 +665,11 @@
  ],
  "metadata": {
   "kernelspec": {
+<<<<<<< HEAD
+   "display_name": "Python 3 (ipykernel)",
+=======
    "display_name": "ALenv",
+>>>>>>> main
    "language": "python",
    "name": "python3"
   },
@@ -463,7 +683,11 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
+<<<<<<< HEAD
+   "version": "3.10.12"
+=======
    "version": "3.12.3"
+>>>>>>> main
   }
  },
  "nbformat": 4,

@@ -16,3 +16,6 @@ So we need to make sure that we have dedicated locations for each of the detecto
 UNO goes under the train
 DOS goes on the monolith
 TRES will go into the dome
+
+## Caveats
+Note that the datalogger scripts require the year to be between 2025-2027 or else nothing will be recorded. To fix change the condition for creating the file.
