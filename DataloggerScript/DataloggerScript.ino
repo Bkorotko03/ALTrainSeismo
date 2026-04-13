@@ -1,5 +1,5 @@
 // data recording program for each of the arduinos
-// takes analog reading at *10 Hz* and syncs with the GPS satellite at *1 Hz*
+// takes analog reading at *100 Hz* and syncs with the GPS satellite at *1 Hz*
 // hopefully there are good comments
 
 // imports
