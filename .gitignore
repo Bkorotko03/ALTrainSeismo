@@ -1,5 +1,6 @@
 ./testsAndSuch/.ipynb_checkpoints/
 testsAndSuch/csvs/
+**/__pycache__
 
 # macOS
 .DS_Store
