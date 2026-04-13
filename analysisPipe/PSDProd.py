@@ -17,8 +17,8 @@ defNper = 300
 freqDict = {
     f'freq{defFreq}':defFreq,
     f'freq{int(defFreq/2)}':defFreq/2,
-    f'freq{int(defFreq/4)}':defFreq/4,
-    f'freq{int(defFreq/10)}':defFreq/10,
+    # f'freq{int(defFreq/4)}':defFreq/4,
+    # f'freq{int(defFreq/10)}':defFreq/10,
     }
 
 # now define a quick downsample function
@@ -62,3 +62,6 @@ def PSDAverage(dict,fdict):
         PSDAvgDict[label] = PSDSum / len(dict[label])
         fAvgDict[label] = fSum / len(fdict[label])
     return PSDAvgDict,fAvgDict
+
+def decibel(signal,ref):
+    return 10 * np.log10(signal/ref)
