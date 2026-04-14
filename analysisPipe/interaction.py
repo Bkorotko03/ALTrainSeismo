@@ -33,11 +33,8 @@ def _get_str(prompt, default):
     raw = input(prompt).strip()
     if raw == "":
         return default
-    elif (raw == "lin") or (raw == "log"):
-        return raw
     else:
-        print('Input lin or log')
-        sys.exit()
+        return raw
 
 def _get_bool(prompt, default=True):
     raw = input(prompt).strip().lower()
