@@ -26,7 +26,7 @@ plt.rcParams['font.family'] = 'serif'
 plt.rcParams['font.serif'] = 'DejaVu Sans'
 
 # for saving figures
-plt.rcParams['figure.figsize'] = (3,2)
+plt.rcParams['figure.figsize'] = (6,4)
 plt.rcParams["figure.dpi"] = 300
 
 # set up initial globals, these will shortly be replaced by interaction
