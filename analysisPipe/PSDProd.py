@@ -16,7 +16,7 @@ defNper = 300
 # remember PSD can only probe up to sampFreq/2
 freqDict = {
     f'freq{defFreq}':defFreq,
-    f'freq{int(defFreq/2)}':defFreq/2,
+    # f'freq{int(defFreq/2)}':defFreq/2,
     # f'freq{int(defFreq/4)}':defFreq/4,
     # f'freq{int(defFreq/10)}':defFreq/10,
     }
