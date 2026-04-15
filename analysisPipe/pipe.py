@@ -106,14 +106,14 @@ dosEventIdx = cleaner.eventIdx(dosSecs,eventSecs)
 tresEventIdx = cleaner.eventIdx(tresSecs,eventSecs)
 
 # apply event and noise windows, make lists of arrays
-unoEventVolt,unoNoiseVolt = cleaner.windowMaker(unoVolt,unoEventIdx)
-unoEventSecs,unoNoiseSecs = cleaner.windowMaker(unoSecs,unoEventIdx)
+unoEventVolt,unoNoiseVolt = cleaner.windowMaker(unoVolt,unoEventIdx,halfWIndex)
+unoEventSecs,unoNoiseSecs = cleaner.windowMaker(unoSecs,unoEventIdx,halfWIndex)
 
-dosEventVolt,dosNoiseVolt = cleaner.windowMaker(dosVolt,dosEventIdx)
-dosEventSecs,dosNoiseSecs = cleaner.windowMaker(dosSecs,dosEventIdx)
+dosEventVolt,dosNoiseVolt = cleaner.windowMaker(dosVolt,dosEventIdx,halfWIndex)
+dosEventSecs,dosNoiseSecs = cleaner.windowMaker(dosSecs,dosEventIdx,halfWIndex)
 
-tresEventVolt,tresNoiseVolt = cleaner.windowMaker(tresVolt,tresEventIdx)
-tresEventSecs,tresNoiseSecs = cleaner.windowMaker(tresSecs,tresEventIdx)
+tresEventVolt,tresNoiseVolt = cleaner.windowMaker(tresVolt,tresEventIdx,halfWIndex)
+tresEventSecs,tresNoiseSecs = cleaner.windowMaker(tresSecs,tresEventIdx,halfWIndex)
 
 print('Plotting windows...')
 # make event and noise window curves for each detector
@@ -195,13 +195,13 @@ tresNoisePSDs,tresNoiseF = prod.makePSD(tresNoiseVoltDown)
 
 # average PSDs
 unoEventAvgPSD,unoEventAvgF = prod.PSDAverage(unoEventPSDs,unoEventF)
-unoNoiseAvgPSD,unoNoiseAvgF = prod.PSDAverage(unoEventPSDs,unoEventF)
+unoNoiseAvgPSD,unoNoiseAvgF = prod.PSDAverage(unoNoisePSDs,unoNoiseF)
 
 dosEventAvgPSD,dosEventAvgF = prod.PSDAverage(dosEventPSDs,dosEventF)
-dosNoiseAvgPSD,dosNoiseAvgF = prod.PSDAverage(dosEventPSDs,dosEventF)
+dosNoiseAvgPSD,dosNoiseAvgF = prod.PSDAverage(dosNoisePSDs,dosNoiseF)
 
 tresEventAvgPSD,tresEventAvgF = prod.PSDAverage(tresEventPSDs,tresEventF)
-tresNoiseAvgPSD,tresNoiseAvgF = prod.PSDAverage(tresEventPSDs,tresEventF)
+tresNoiseAvgPSD,tresNoiseAvgF = prod.PSDAverage(tresNoisePSDs,tresNoiseF)
 
 print('Plotting PSDs...')
 # now to plot these for each frequency band

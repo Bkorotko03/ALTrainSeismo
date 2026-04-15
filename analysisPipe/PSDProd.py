@@ -36,19 +36,44 @@ def downSamp(nArr,fd=freqDict):
 
 # now to actually make the PSDs
 # take in dict of all our signals, output PSD and frequency grid dicts with same labelling convention
-def makePSD(dict,fDict = freqDict):
+# def makePSD(dict,fDict = freqDict):
+#     PSDDict = {}
+#     fGridDict = {}
+#     for label in fDict.keys():
+#         list = dict[label]
+#         PSDDict[label] = []
+#         fGridDict[label] = []
+#         for i in range(len(list)):
+#             fGrid,psd = welch(list[i],fs=freqDict[label],nperseg=defNper)
+#             PSDDict[label].append(psd)
+#             fGridDict[label].append(fGrid)
+    
+#     return PSDDict,fGridDict
+
+# new func i guess?
+def makePSD(dict, fDict=freqDict):
     PSDDict = {}
     fGridDict = {}
     for label in fDict.keys():
-        list = dict[label]
+        arrList = dict[label]
         PSDDict[label] = []
         fGridDict[label] = []
-        for i in range(len(list)):
-            fGrid,psd = welch(list[i],fs=freqDict[label],nperseg=defNper)
+
+        long_arrs = [a for a in arrList if len(a) >= defNper]
+        short_arrs = [a for a in arrList if len(a) < defNper]
+
+        # pool short arrays together; if combined they're long enough, keep them
+        if short_arrs:
+            combined = np.concatenate(short_arrs)
+            if len(combined) >= defNper:
+                long_arrs.append(combined)
+
+        for arr in long_arrs:
+            fGrid, psd = welch(arr, fs=freqDict[label], nperseg=defNper)
             PSDDict[label].append(psd)
             fGridDict[label].append(fGrid)
-    
-    return PSDDict,fGridDict
+
+    return PSDDict, fGridDict
 
 # now we want to average across arrays per frequency sample
 # gives average across each dict label of above dictionaries
