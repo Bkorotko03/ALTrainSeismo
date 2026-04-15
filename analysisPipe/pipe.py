@@ -122,6 +122,7 @@ for i in range(len(unoEventVolt)):
 
 plt.ylabel('Volts')
 plt.xlabel('Seconds')
+plt.xlim(unoSecs.min(),unoSecs.max())
 plt.title('Uno Event Voltage Curves')
 plt.savefig(f'{figOut}/unoEventVolt.png')
 plt.close()
@@ -131,6 +132,7 @@ for i in range(len(dosEventVolt)):
 
 plt.ylabel('Volts')
 plt.xlabel('Seconds')
+plt.xlim(dosSecs.min(),dosSecs.max())
 plt.title('Dos Event Voltage Curves')
 plt.savefig(f'{figOut}/dosEventVolt.png')
 plt.close()
@@ -140,6 +142,7 @@ for i in range(len(tresEventVolt)):
 
 plt.ylabel('Volts')
 plt.xlabel('Seconds')
+plt.xlim(tresSecs.min(),tresSecs.max())
 plt.title('Tres Event Voltage Curves')
 plt.savefig(f'{figOut}/tresEventVolt.png')
 plt.close()
@@ -149,6 +152,7 @@ for i in range(len(unoNoiseVolt)):
 
 plt.ylabel('Volts')
 plt.xlabel('Seconds')
+plt.xlim(unoSecs.min(),unoSecs.max())
 plt.title('Uno Noise Voltage Curves')
 plt.savefig(f'{figOut}/unoNoiseVolt.png')
 plt.close()
@@ -158,6 +162,7 @@ for i in range(len(dosNoiseVolt)):
 
 plt.ylabel('Volts')
 plt.xlabel('Seconds')
+plt.xlim(dosSecs.min(),dosSecs.max())
 plt.title('Dos Noise Voltage Curves')
 plt.savefig(f'{figOut}/dosNoiseVolt.png')
 plt.close()
@@ -167,6 +172,7 @@ for i in range(len(tresNoiseVolt)):
 
 plt.ylabel('Volts')
 plt.xlabel('Seconds')
+plt.xlim(tresSecs.min(),tresSecs.max())
 plt.title('Tres Noise Voltage Curves')
 plt.savefig(f'{figOut}/tresNoiseVolt.png')
 plt.close()
@@ -260,6 +266,7 @@ plt.close()
 
 print('Creating decibel PSDs...')
 # make PSDs in dB
+# i know hardcoding the freq100 is bad, can always downsample and deal with that but thats such a pain rn
 unoNoisedB = prod.decibel(unoNoiseAvgPSD['freq100'],unoNoMagPSD)
 dosNoisedB = prod.decibel(dosNoiseAvgPSD['freq100'],dosNoMagPSD)
 tresNoisedB = prod.decibel(tresNoiseAvgPSD['freq100'],tresNoMagPSD)
@@ -291,5 +298,22 @@ plt.legend()
 plt.title('Avg. Train Signal over Avg. Background Noise')
 plt.savefig(f'{figOut}/trainOverBkgd.png')
 plt.close()
+
+# now want to compare total signal jumps between events and noise per detector
+with open(f'{figOut}/eventSignificance.txt','w') as file:
+    for label in prod.freqDict.keys():
+        print(f'Computing event signal increase in dB over noise for sampling frequency {prod.freqDict[label]}...')
+        unoEventAvgInt = np.trapezoid(unoEventAvgPSD[label],unoEventAvgF[label])
+        unoNoiseAvgInt = np.trapezoid(unoNoiseAvgPSD[label],unoNoiseAvgF[label])
+        dosEventAvgInt = np.trapezoid(dosEventAvgPSD[label],dosEventAvgF[label])
+        dosNoiseAvgInt = np.trapezoid(dosNoiseAvgPSD[label],dosNoiseAvgF[label])
+        tresEventAvgInt = np.trapezoid(tresEventAvgPSD[label],tresEventAvgF[label])
+        tresNoiseAvgInt = np.trapezoid(tresNoiseAvgPSD[label],tresNoiseAvgF[label])
+
+        unoAvgIntdB = prod.decibel(unoEventAvgInt,unoNoiseAvgInt)
+        dosAvgIntdB = prod.decibel(dosEventAvgInt,dosNoiseAvgInt)
+        tresAvgIntdB = prod.decibel(tresEventAvgInt,tresNoiseAvgInt)
+
+        file.write(f'Total signal to noise ratio in decibels for 0 - {sampFreq/2} Hz band:\n Uno: {unoAvgIntdB} dB\n Dos: {dosAvgIntdB} dB\n Tres: {tresAvgIntdB} dB')
 
 print(f'All files saved under {figOut}.\n Goodbye :3')
