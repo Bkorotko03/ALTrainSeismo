@@ -15,7 +15,7 @@ def _get_int(prompt, default, min_value=None):
         print(f"Using default {default} (invalid integer).")
         return default
 
-def _get_float(prompt, default, min_value=None):
+def _get_float(prompt, default, min_value=None,max_value=None):
     raw = input(prompt).strip()
     if raw == "":
         return default
@@ -24,7 +24,12 @@ def _get_float(prompt, default, min_value=None):
         if min_value is not None and val < min_value:
             print(f"Using default {default} (value must be >= {min_value}).")
             return default
+        
+        elif max_value is not None and val > max_value:
+            print(f"Using default {default} (value must be <= {max_value}).")
+            return default
         return val
+    
     except ValueError:
         print(f"Using default {default} (invalid number).")
         return default

@@ -10,7 +10,7 @@ halfWIndex = window_half_width * sampFreq
 defVoltCon = 5/16383
 
 # extract big numpy arrays from csv files
-def arrayExtract(fpath,voltCon=defVoltCon,endCut=10,fs=100):
+def arrayExtract(fpath,voltCon=defVoltCon,endCut=120,fs=100):# this cuts 2 minutes off of the end of each run, need to be long now
     # import csv and prep colums
     DF = pd.read_csv(fpath)
     DF['seconds'] = pd.to_numeric(DF['seconds'],errors='coerce')
@@ -68,7 +68,7 @@ def eventIdx(secs,clicker):
     return np.array(idxArr)
 
 # pull windows from inputted array into noise and signal
-def windowMaker(arr,idxarr,halfWIndex=halfWIndex,):
+def windowMaker(arr,idxarr,halfWIndex=halfWIndex):
     # kind of a big function but it should output lists of arrays with event and background segregated
     # first need to make some cutoff indices
     noiseWIndex = []

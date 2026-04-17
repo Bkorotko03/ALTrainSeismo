@@ -50,19 +50,31 @@ cleaner.window_half_width = winHalfWidth
 cleaner.halfWIndex = halfWIndex
 cleaner.defVoltCon = voltCon
 
-# get file names for this run
-unoFName = inter._get_str(f"Enter file *name* for UNO in UNO output path: ",'unoTest.CSV')
-dosFName = inter._get_str(f"Enter file *name* for DOS in DOS output path: ",'dosTest.CSV')
-tresFName = inter._get_str(f"Enter file *name* for TRES in TRES output path: ",'tresTest.CSV')
+freqDict = {
+    f'freq{sampFreq}':sampFreq,
+    # f'freq{int(sampFreq/2)}':sampFreq/2,
+    # f'freq{int(sampFreq/4)}':sampFreq/4,
+    # f'freq{int(sampFreq/10)}':sampFreq/10,
+    }
 
-unoPath = f'../SDCardOut/uno/{unoFName}'
-dosPath = f'../SDCardOut/dos/{dosFName}'
-tresPath = f'../SDCardOut/tres/{tresFName}'
+prod.freqDict = freqDict
 
-# the no mag names should always be the same
-unoNoMagPath = '../SDCardOut/uno/noMagFullUNO.CSV'
-dosNoMagPath = '../SDCardOut/dos/noMagFullDOS.CSV'
-tresNoMagPath = '../SDCardOut/tres/noMagFullTRES.CSV'
+# initialize detectors
+detectors = {}
+for name, default in [('uno','concurrentUNO2.CSV'),('dos','concurrentDOS2.CSV'),('tres','concurrentTRES2.CSV')]:
+    active = inter._get_bool(f'Is {name} running? (y/n, press return for y): ',True)
+    if active:
+        fname = inter._get_str(f'Enter file *name* for {name} in {name} output path: ',default)
+        clickBool = inter._get_bool(f'Valid clicker for {name}? (y/n, press return for default = y): ',True)
+        detectors[name] = {
+            'path': f'../SDCardOut/{name}/{fname}',
+            'noMagPath': f'../SDCardOut/{name}/noMagFull{name.upper()}.CSV',
+            'clickBool': clickBool,
+        }
+
+if not detectors:
+    print('No detectors initialized. Goodbye :3')
+    sys.exit(1)
 
 # get clicker path
 clickFName = inter._get_str('Enter file *name* for clicker csv: ','clickTest.CSV')
@@ -77,17 +89,15 @@ os.makedirs(figOut,exist_ok=True)
 
 print('Extracting arrays from CSVs...')
 
-# now lets extract arrays from data CSVs
-unoSecs,unoSens,unoVolt = cleaner.arrayExtract(unoPath)
-dosSecs,dosSens,dosVolt = cleaner.arrayExtract(dosPath)
-tresSecs,tresSens,tresVolt = cleaner.arrayExtract(tresPath)
+for name,d in detectors.items():
+    d['secs'],d['sens'],d['volt'] = cleaner.arrayExtract(d['path'])
+    print(f'{name} arrays extracted')
 
 print('Plotting raw voltages...')
 
 # save raw voltage curves
-plt.plot(unoSecs,unoVolt,label='uno')
-plt.plot(dosSecs,dosVolt,label='dos')
-plt.plot(tresSecs,tresVolt,label='tres')
+for name,d in detectors.items():
+    plt.plot(d['secs'],d['volt'],label=name)
 plt.legend()
 plt.xlabel('seconds')
 plt.ylabel('Volts')
@@ -101,115 +111,77 @@ print('Starting windowing...')
 eventSecs = cleaner.utcSecondsConv(clickerPath)
 
 # create indexes from these times
-unoEventIdx = cleaner.eventIdx(unoSecs,eventSecs)
-dosEventIdx = cleaner.eventIdx(dosSecs,eventSecs)
-tresEventIdx = cleaner.eventIdx(tresSecs,eventSecs)
+for name,d in detectors.items():
+    d['eventIdx'] = cleaner.eventIdx(d['secs'],eventSecs)
 
 # apply event and noise windows, make lists of arrays
-unoEventVolt,unoNoiseVolt = cleaner.windowMaker(unoVolt,unoEventIdx)
-unoEventSecs,unoNoiseSecs = cleaner.windowMaker(unoSecs,unoEventIdx)
+for name,d in detectors.items():
+    # this is for if the clicker times are valid (ie the detector is near the clicker)
+    if d['clickBool'] == True:
+        d['eventVolt'],d['noiseVolt'] = cleaner.windowMaker(d['volt'],d['eventIdx'],halfWIndex)
+        d['eventSecs'],d['noiseSecs'] = cleaner.windowMaker(d['secs'],d['eventIdx'],halfWIndex)
+    # this is for dos/tres, which are far away from where clicks are happening
+    elif d['clickBool'] == False:
+        d['statEventIdx'] = []
+        for i in range(len(d['volt'])):
+            if (d['volt'][i] <= np.percentile(d['volt'],0.1)) or (d['volt'][i] >= np.percentile(d['volt'],99.9)):
+                d['statEventIdx'].append(i)
+        
+        d['eventVolt'],d['noiseVolt'] = cleaner.windowMaker(d['volt'],d['statEventIdx'],halfWIndex)
+        d['eventSecs'],d['noiseSecs'] = cleaner.windowMaker(d['secs'],d['statEventIdx'],halfWIndex)
 
-dosEventVolt,dosNoiseVolt = cleaner.windowMaker(dosVolt,dosEventIdx)
-dosEventSecs,dosNoiseSecs = cleaner.windowMaker(dosSecs,dosEventIdx)
+    # this is if something breaks
+    else:
+        print(f'Clicker bool not set for detector {name}, goodbye :3')
+        sys.exit(1)
 
-tresEventVolt,tresNoiseVolt = cleaner.windowMaker(tresVolt,tresEventIdx)
-tresEventSecs,tresNoiseSecs = cleaner.windowMaker(tresSecs,tresEventIdx)
 
 print('Plotting windows...')
 # make event and noise window curves for each detector
-for i in range(len(unoEventVolt)):
-    plt.plot(unoEventSecs[i],unoEventVolt[i])
+for name,d in detectors.items():
+    for i in range(len(d['eventVolt'])):
+        plt.plot(d['eventSecs'][i],d['eventVolt'][i])
 
-plt.ylabel('Volts')
-plt.xlabel('Seconds')
-plt.title('Uno Event Voltage Curves')
-plt.savefig(f'{figOut}/unoEventVolt.png')
-plt.close()
+    plt.ylabel('Volts')
+    plt.xlabel('Seconds')
+    plt.xlim(d['secs'].min(),d['secs'].max())
+    plt.ylim(d['volt'].min()-0.1,d['volt'].max()+0.1)
+    plt.title(f'{name.capitalize()} Event Voltage Curves')
+    plt.savefig(f'{figOut}/{name}EventVolt.png')
+    plt.close()
 
-for i in range(len(dosEventVolt)):
-    plt.plot(dosEventSecs[i],dosEventVolt[i])
+    for i in range(len(d['noiseVolt'])):
+        plt.plot(d['noiseSecs'][i],d['noiseVolt'][i])
 
-plt.ylabel('Volts')
-plt.xlabel('Seconds')
-plt.title('Dos Event Voltage Curves')
-plt.savefig(f'{figOut}/dosEventVolt.png')
-plt.close()
-
-for i in range(len(tresEventVolt)):
-    plt.plot(tresEventSecs[i],tresEventVolt[i])
-
-plt.ylabel('Volts')
-plt.xlabel('Seconds')
-plt.title('Tres Event Voltage Curves')
-plt.savefig(f'{figOut}/tresEventVolt.png')
-plt.close()
-
-for i in range(len(unoNoiseVolt)):
-    plt.plot(unoNoiseSecs[i],unoNoiseVolt[i])
-
-plt.ylabel('Volts')
-plt.xlabel('Seconds')
-plt.title('Uno Noise Voltage Curves')
-plt.savefig(f'{figOut}/unoNoiseVolt.png')
-plt.close()
-
-for i in range(len(dosNoiseVolt)):
-    plt.plot(dosNoiseSecs[i],dosNoiseVolt[i])
-
-plt.ylabel('Volts')
-plt.xlabel('Seconds')
-plt.title('Dos Noise Voltage Curves')
-plt.savefig(f'{figOut}/dosNoiseVolt.png')
-plt.close()
-
-for i in range(len(tresNoiseVolt)):
-    plt.plot(tresNoiseSecs[i],tresNoiseVolt[i])
-
-plt.ylabel('Volts')
-plt.xlabel('Seconds')
-plt.title('Tres Noise Voltage Curves')
-plt.savefig(f'{figOut}/tresNoiseVolt.png')
-plt.close()
+    plt.ylabel('Volts')
+    plt.xlabel('Seconds')
+    plt.xlim(d['secs'].min(),d['secs'].max())
+    plt.ylim(d['volt'].min()-0.1,d['volt'].max()+0.1)
+    plt.title(f'{name.capitalize()} Noise Voltage Curves')
+    plt.savefig(f'{figOut}/{name}NoiseVolt.png')
+    plt.close()
 
 print('Downsampling...')
 # apply downsampling for PSD prod
-unoEventVoltDown = prod.downSamp(unoEventVolt)
-unoNoiseVoltDown = prod.downSamp(unoNoiseVolt)
-
-dosEventVoltDown = prod.downSamp(dosEventVolt)
-dosNoiseVoltDown = prod.downSamp(dosNoiseVolt)
-
-tresEventVoltDown = prod.downSamp(tresEventVolt)
-tresNoiseVoltDown = prod.downSamp(tresNoiseVolt)
+for name,d in detectors.items():
+    d['eventVoltDown'] = prod.downSamp(d['eventVolt'])
+    d['noiseVoltDown'] = prod.downSamp(d['noiseVolt'])
 
 print('Making PSDs...')
 # make dicts of PSDs
-unoEventPSDs,unoEventF = prod.makePSD(unoEventVoltDown)
-unoNoisePSDs,unoNoiseF = prod.makePSD(unoNoiseVoltDown)
+for name,d in detectors.items():
+    d['eventPSDs'],d['eventF'] = prod.makePSD(d['eventVoltDown'])
+    d['noisePSDs'],d['noiseF'] = prod.makePSD(d['noiseVoltDown'])
 
-dosEventPSDs,dosEventF = prod.makePSD(dosEventVoltDown)
-dosNoisePSDs,dosNoiseF = prod.makePSD(dosNoiseVoltDown)
-
-tresEventPSDs,tresEventF = prod.makePSD(tresEventVoltDown)
-tresNoisePSDs,tresNoiseF = prod.makePSD(tresNoiseVoltDown)
-
-# average PSDs
-unoEventAvgPSD,unoEventAvgF = prod.PSDAverage(unoEventPSDs,unoEventF)
-unoNoiseAvgPSD,unoNoiseAvgF = prod.PSDAverage(unoEventPSDs,unoEventF)
-
-dosEventAvgPSD,dosEventAvgF = prod.PSDAverage(dosEventPSDs,dosEventF)
-dosNoiseAvgPSD,dosNoiseAvgF = prod.PSDAverage(dosEventPSDs,dosEventF)
-
-tresEventAvgPSD,tresEventAvgF = prod.PSDAverage(tresEventPSDs,tresEventF)
-tresNoiseAvgPSD,tresNoiseAvgF = prod.PSDAverage(tresEventPSDs,tresEventF)
+    d['eventAvgPSD'],d['eventAvgF'] = prod.PSDAverage(d['eventPSDs'],d['eventF'])
+    d['noiseAvgPSD'],d['noiseAvgF'] = prod.PSDAverage(d['noisePSDs'],d['noiseF'])
 
 print('Plotting PSDs...')
 # now to plot these for each frequency band
 # in the future might just let the dictionary have one entry, but I wanted to allow for downsampling in the code
 for label in prod.freqDict.keys():
-    plt.plot(unoEventAvgF[label],unoEventAvgPSD[label],label='uno')
-    plt.plot(dosEventAvgF[label],dosEventAvgPSD[label],label='dos')
-    plt.plot(tresEventAvgF[label],tresEventAvgPSD[label],label='tres')
+    for name,d in detectors.items():
+        plt.plot(d['eventAvgF'][label],d['eventAvgPSD'][label],label=name)
 
     plt.semilogy()
     plt.legend()
@@ -220,9 +192,8 @@ for label in prod.freqDict.keys():
     plt.close()
 
 for label in prod.freqDict.keys():
-    plt.plot(unoNoiseAvgF[label],unoNoiseAvgPSD[label],label='uno')
-    plt.plot(dosNoiseAvgF[label],dosNoiseAvgPSD[label],label='dos')
-    plt.plot(tresNoiseAvgF[label],tresNoiseAvgPSD[label],label='tres')
+    for name,d in detectors.items():
+        plt.plot(d['noiseAvgF'][label],d['noiseAvgPSD'][label],label=name)
 
     plt.semilogy()
     plt.legend()
@@ -234,62 +205,165 @@ for label in prod.freqDict.keys():
 
 print('Converting amp noise to baseline PSDs...')
 # now make the baseline PSD for amp noise
-unoNoMagSecs,unoNoMagSens,unoNoMagVolt = cleaner.arrayExtract(unoNoMagPath)
-dosNoMagSecs,dosNoMagSens,dosNoMagVolt = cleaner.arrayExtract(dosNoMagPath)
-tresNoMagSecs,tresNoMagSens,tresNoMagVolt = cleaner.arrayExtract(tresNoMagPath)
+for name,d in detectors.items():
+    d['noMagSecs'],d['noMagSens'],d['noMagVolt'] = cleaner.arrayExtract(d['noMagPath'])
 
-# yeah these guys are only gonna exist at 100 Hz idk why i did the downsampling thing tbh
-unoNoMagF,unoNoMagPSD = welch(unoNoMagVolt,fs=sampFreq,nperseg=nper)
+for name,d in detectors.items():
+    d['noMagVoltDown'] = prod.downSamp([d['noMagVolt']])
 
-dosNoMagF,dosNoMagPSD = welch(dosNoMagVolt,fs=sampFreq,nperseg=nper)
 
-tresNoMagF,tresNoMagPSD = welch(tresNoMagVolt,fs=sampFreq,nperseg=nper)
+for name,d in detectors.items():
+    d['noMagF'] = {}
+    d['noMagPSD'] = {}
+    for label in prod.freqDict.keys():
+        d['noMagF'][label],d['noMagPSD'][label] = welch(d['noMagVoltDown'][label][0],fs=prod.freqDict[label],nperseg=nper)
 
 print('Plotting amp noise...')
-plt.plot(unoNoMagF,unoNoMagPSD,label='uno')
-plt.plot(dosNoMagF,dosNoMagPSD,label='dos')
-plt.plot(tresNoMagF,tresNoMagPSD,label='tres')
 
-plt.semilogy()
-plt.legend()
-plt.xlabel('Hz')
-plt.ylabel('V$^2$/Hz')
-plt.title('Amp Noise PSDs')
-plt.savefig(f'{figOut}/ampNoise.png')
-plt.close()
+for label in prod.freqDict.keys():
+    for name,d in detectors.items():
+        plt.plot(d['noMagF'][label],d['noMagPSD'][label],label=name)
+    
+    plt.semilogy()
+    plt.legend()
+    plt.xlabel('Hz')
+    plt.ylabel('V$^2$/Hz')
+    plt.title(f'Amp Noise PSDs ($f_s = ${prod.freqDict[label]} Hz)')
+    plt.savefig(f'{figOut}/ampNoisefs{int(prod.freqDict[label])}.png')
+    plt.close()
 
 print('Creating decibel PSDs...')
 # make PSDs in dB
-unoNoisedB = prod.decibel(unoNoiseAvgPSD['freq100'],unoNoMagPSD)
-dosNoisedB = prod.decibel(dosNoiseAvgPSD['freq100'],dosNoMagPSD)
-tresNoisedB = prod.decibel(tresNoiseAvgPSD['freq100'],tresNoMagPSD)
+for name,d in detectors.items():
+    d['noisedB'] = {}
+    d['eventdB'] = {}
+    for label in prod.freqDict.keys():
+        d['noisedB'][label] = prod.decibel(d['noiseAvgPSD'][label],d['noMagPSD'][label])
+        d['eventdB'][label] = prod.decibel(d['eventAvgPSD'][label],d['noiseAvgPSD'][label])
 
-unoTraindB = prod.decibel(unoEventAvgPSD['freq100'],unoNoiseAvgPSD['freq100'])
-dosTraindB = prod.decibel(dosEventAvgPSD['freq100'],dosNoiseAvgPSD['freq100'])
-tresTraindB = prod.decibel(tresEventAvgPSD['freq100'],tresNoiseAvgPSD['freq100'])
+print('Plotting decibel PSDs...')
 
-# plot background in dB
-plt.plot(unoNoMagF,unoNoisedB,label='uno')
-plt.plot(dosNoMagF,dosNoisedB,label='dos')
-plt.plot(tresNoMagF,tresNoisedB,label='tres')
+for label in prod.freqDict.keys():
+    # plot background in dB
+    for name,d in detectors.items():
+        plt.plot(d['noMagF'][label],d['noisedB'][label],label=name)
 
-plt.xlabel('Hz')
-plt.ylabel('dB')
-plt.legend()
-plt.title('Avg. Background Noise over Amp Noise')
-plt.savefig(f'{figOut}/bkgdOverAmp.png')
-plt.close()
+    plt.xlabel('Hz')
+    plt.ylabel('dB')
+    plt.legend()
+    plt.title(f'Avg. Background over Amp Noise ($f_s = ${prod.freqDict[label]} Hz)')
+    plt.savefig(f'{figOut}/bkgdOverAmpfs{int(prod.freqDict[label])}.png')
+    plt.close()
 
-# plot train signal
-plt.plot(unoNoMagF,unoTraindB,label='uno')
-plt.plot(dosNoMagF,dosTraindB,label='dos')
-plt.plot(tresNoMagF,tresTraindB,label='tres')
+    # plot train signal
+    for name,d in detectors.items():
+        plt.plot(d['noMagF'][label],d['eventdB'][label],label=name)
 
-plt.xlabel('Hz')
-plt.ylabel('dB')
-plt.legend()
-plt.title('Avg. Train Signal over Avg. Background Noise')
-plt.savefig(f'{figOut}/trainOverBkgd.png')
-plt.close()
+    plt.xlabel('Hz')
+    plt.ylabel('dB')
+    plt.legend()
+    plt.title(f'Avg. Train Signal over Avg. Background ($f_s = ${prod.freqDict[label]} Hz)')
+    plt.savefig(f'{figOut}/trainOverBkgdfs{int(prod.freqDict[label])}.png')
+    plt.close()
+
+# # now want to compare total signal jumps between events and noise per detector
+# with open(f'{figOut}/eventSignificance.txt','w') as file:
+#     for label in prod.freqDict.keys():
+#         print(f'Computing event signal increase in dB over noise for sampling frequency {prod.freqDict[label]}...')
+#         unoEventAvgInt = np.trapezoid(unoEventAvgPSD[label],unoEventAvgF[label])
+#         unoNoiseAvgInt = np.trapezoid(unoNoiseAvgPSD[label],unoNoiseAvgF[label])
+#         dosEventAvgInt = np.trapezoid(dosEventAvgPSD[label],dosEventAvgF[label])
+#         dosNoiseAvgInt = np.trapezoid(dosNoiseAvgPSD[label],dosNoiseAvgF[label])
+#         tresEventAvgInt = np.trapezoid(tresEventAvgPSD[label],tresEventAvgF[label])
+#         tresNoiseAvgInt = np.trapezoid(tresNoiseAvgPSD[label],tresNoiseAvgF[label])
+
+#         unoAvgIntdB = prod.decibel(unoEventAvgInt,unoNoiseAvgInt)
+#         dosAvgIntdB = prod.decibel(dosEventAvgInt,dosNoiseAvgInt)
+#         tresAvgIntdB = prod.decibel(tresEventAvgInt,tresNoiseAvgInt)
+
+#         file.write(f'Total signal to noise ratio in decibels for 0 - {sampFreq/2} Hz band:\n Uno: {unoAvgIntdB} dB\n Dos: {dosAvgIntdB} dB\n Tres: {tresAvgIntdB} dB')
+
+# SNR vs window width sweep per detector, thank you copilot :)
+print('Computing SNR vs window width...')
+
+# get snr band
+bandMin = 10
+bandMax = sampFreq/2
+
+bandMin = inter._get_float(f'SNR analysis band minimum? (press return for default = {bandMin} Hz): ',bandMin,0,bandMax)
+bandMax = inter._get_float(f'SNR analysis band maximum? (press return for default = {bandMax} Hz): ',bandMax,bandMin,sampFreq)
+
+
+snr_band = (bandMin,bandMax)
+candidate_widths = np.arange(1, 15, 0.25)  # seconds
+freqLabel = f'freq{int(sampFreq)}'
+
+for name, d in detectors.items():
+    snr_curve = []
+    for cand in candidate_widths:
+        cand_half = int(cand * sampFreq)
+        if d['clickBool'] == True:
+            eVolt, nVolt = cleaner.windowMaker(d['volt'], d['eventIdx'], cand_half)
+        elif d['clickBool'] == False:
+            eVolt, nVolt = cleaner.windowMaker(d['volt'], d['statEventIdx'], cand_half)
+        else:
+            print(f'Clicker bool not set for detector {name}, goodbye :3')
+            sys.exit(1)
+
+        eDown = prod.downSamp(eVolt)
+        nDown = prod.downSamp(nVolt)
+        ePSDs, eFs = prod.makePSD(eDown)
+        nPSDs, nFs = prod.makePSD(nDown)
+        if not ePSDs[freqLabel] or not nPSDs[freqLabel]:
+            snr_curve.append(np.nan)
+            continue
+        eAvg, eF = prod.PSDAverage(ePSDs, eFs)
+        nAvg, nF = prod.PSDAverage(nPSDs, nFs)
+        fArr = eF[freqLabel]
+        mask = (fArr >= snr_band[0]) & (fArr <= snr_band[1])
+        ePow = np.trapezoid(eAvg[freqLabel][mask], fArr[mask])
+        nPow = np.trapezoid(nAvg[freqLabel][mask], fArr[mask])
+        snr_curve.append(10 * np.log10(ePow / nPow) if nPow > 0 else np.nan)
+
+    snr_arr = np.array(snr_curve)
+    valid = ~np.isnan(snr_arr)
+    if valid.any():
+        best_width = candidate_widths[np.nanargmax(snr_arr)]
+        best_snr = np.nanmax(snr_arr)
+        print(f'{name}: max SNR {best_snr:.2f} dB at window half-width {best_width} s')
+        d['bestWinHalfWidth'] = float(best_width)
+        d['bestSNRdB'] = float(best_snr)
+    else:
+        d['bestWinHalfWidth'] = None
+        d['bestSNRdB'] = None
+
+    plt.plot(candidate_widths, snr_curve)
+    plt.axvline(winHalfWidth, color='r', linestyle='--', label=f'chosen = {winHalfWidth} s')
+    if valid.any():
+        plt.axvline(best_width, color='g', linestyle='--', label=f'optimal = {best_width} s')
+    plt.xlabel('Window half-width (s)')
+    plt.ylabel('SNR (dB)')
+    plt.title(f'{name.capitalize()} SNR vs Window Width ({snr_band[0]}-{snr_band[1]} Hz)')
+    plt.legend()
+    plt.savefig(f'{figOut}/{name}SNRvsWindow.png')
+    plt.close()
+
+# output detectors dict as json (strip numpy arrays, keep scalar metadata)
+import json
+
+def _json_safe(v):
+    if isinstance(v, (np.ndarray, list, dict)):
+        return None  # skip arrays and nested dicts of arrays
+    if isinstance(v, (np.integer, np.floating)):
+        return v.item()
+    return v
+
+detectors_out = {
+    name: {k: _json_safe(v) for k, v in d.items() if _json_safe(v) is not None}
+    for name, d in detectors.items()
+}
+
+with open(f'{figOut}/detectors.json', 'w') as f:
+    json.dump(detectors_out, f, indent=2)
 
 print(f'All files saved under {figOut}.\n Goodbye :3')
