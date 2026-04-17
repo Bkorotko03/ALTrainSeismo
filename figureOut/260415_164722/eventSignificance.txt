@@ -1,4 +1,0 @@
-Total signal to noise ratio in decibels for 0 - 50.0 Hz band:
- Uno: 5.449006454938907 dB
- Dos: -1.0649655358799097 dB
- Tres: -0.18828673526603856 dB

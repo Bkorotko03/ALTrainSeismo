@@ -50,10 +50,25 @@ cleaner.window_half_width = winHalfWidth
 cleaner.halfWIndex = halfWIndex
 cleaner.defVoltCon = voltCon
 
+# # initialize detectors
+# detectors = {}
+# for name, default in [('uno','concurrentUNO2.CSV'),('dos','concurrentDOS2.CSV'),('tres','concurrentTRES2.CSV')]:
+#     active = inter._get_bool(f'Is {name} running? (y/n, press return for n): ',False)
+#     if active:
+#         fname = inter._get_str(f'Enter file *name* for {name} in {name} output path: ',default)
+#         detectors[name] = {
+#             'path': f'..SDCardOut/{name}/{fname}',
+#             'noMagPath': f'../SDCardOut/{name}/noMagFull{name.capitalize()}.CSV',
+#         }
+
+# if not detectors:
+#     print('No detectors initialized. Goodbye :3')
+#     sys.exit(1)
+
 # get file names for this run
-unoFName = inter._get_str(f"Enter file *name* for UNO in UNO output path: ",'unoTest.CSV')
-dosFName = inter._get_str(f"Enter file *name* for DOS in DOS output path: ",'dosTest.CSV')
-tresFName = inter._get_str(f"Enter file *name* for TRES in TRES output path: ",'tresTest.CSV')
+unoFName = inter._get_str(f"Enter file *name* for UNO in UNO output path: ",'concurrentUNO2.CSV')
+dosFName = inter._get_str(f"Enter file *name* for DOS in DOS output path: ",'concurrentDOS2.CSV')
+tresFName = inter._get_str(f"Enter file *name* for TRES in TRES output path: ",'concurrentTRES2.CSV')
 
 unoPath = f'../SDCardOut/uno/{unoFName}'
 dosPath = f'../SDCardOut/dos/{dosFName}'
