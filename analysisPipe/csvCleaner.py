@@ -68,7 +68,7 @@ def eventIdx(secs,clicker):
     return np.array(idxArr)
 
 # pull windows from inputted array into noise and signal
-def windowMaker(arr,idxarr,halfWIndex=halfWIndex,):
+def windowMaker(arr,idxarr,halfWIndex=halfWIndex):
     # kind of a big function but it should output lists of arrays with event and background segregated
     # first need to make some cutoff indices
     noiseWIndex = []

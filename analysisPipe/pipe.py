@@ -65,9 +65,11 @@ for name, default in [('uno','concurrentUNO2.CSV'),('dos','concurrentDOS2.CSV'),
     active = inter._get_bool(f'Is {name} running? (y/n, press return for y): ',True)
     if active:
         fname = inter._get_str(f'Enter file *name* for {name} in {name} output path: ',default)
+        clickBool = inter._get_bool(f'Valid clicker for {name}? (y/n, press return for default = y): ',True)
         detectors[name] = {
             'path': f'../SDCardOut/{name}/{fname}',
             'noMagPath': f'../SDCardOut/{name}/noMagFull{name.upper()}.CSV',
+            'clickBool': clickBool,
         }
 
 if not detectors:
@@ -114,8 +116,24 @@ for name,d in detectors.items():
 
 # apply event and noise windows, make lists of arrays
 for name,d in detectors.items():
-    d['eventVolt'],d['noiseVolt'] = cleaner.windowMaker(d['volt'],d['eventIdx'],halfWIndex)
-    d['eventSecs'],d['noiseSecs'] = cleaner.windowMaker(d['secs'],d['eventIdx'],halfWIndex)
+    # this is for if the clicker times are valid (ie the detector is near the clicker)
+    if d['clickBool'] == True:
+        d['eventVolt'],d['noiseVolt'] = cleaner.windowMaker(d['volt'],d['eventIdx'],halfWIndex)
+        d['eventSecs'],d['noiseSecs'] = cleaner.windowMaker(d['secs'],d['eventIdx'],halfWIndex)
+    # this is for dos/tres, which are far away from where clicks are happening
+    elif d['clickBool'] == False:
+        d['statEventIdx'] = []
+        for i in range(len(d['volt'])):
+            if (d['volt'][i] <= np.percentile(d['volt'],0.1)) or (d['volt'][i] >= np.percentile(d['volt'],99.9)):
+                d['statEventIdx'].append(i)
+        
+        d['eventVolt'],d['noiseVolt'] = cleaner.windowMaker(d['volt'],d['statEventIdx'],halfWIndex)
+        d['eventSecs'],d['noiseSecs'] = cleaner.windowMaker(d['secs'],d['statEventIdx'],halfWIndex)
+
+    # this is if something breaks
+    else:
+        print(f'Clicker bool not set for detector {name}, goodbye :3')
+        sys.exit(1)
 
 
 print('Plotting windows...')
@@ -127,6 +145,7 @@ for name,d in detectors.items():
     plt.ylabel('Volts')
     plt.xlabel('Seconds')
     plt.xlim(d['secs'].min(),d['secs'].max())
+    plt.ylim(d['volt'].min()-0.1,d['volt'].max()+0.1)
     plt.title(f'{name.capitalize()} Event Voltage Curves')
     plt.savefig(f'{figOut}/{name}EventVolt.png')
     plt.close()
@@ -137,6 +156,7 @@ for name,d in detectors.items():
     plt.ylabel('Volts')
     plt.xlabel('Seconds')
     plt.xlim(d['secs'].min(),d['secs'].max())
+    plt.ylim(d['volt'].min()-0.1,d['volt'].max()+0.1)
     plt.title(f'{name.capitalize()} Noise Voltage Curves')
     plt.savefig(f'{figOut}/{name}NoiseVolt.png')
     plt.close()
@@ -263,7 +283,7 @@ for label in prod.freqDict.keys():
 
 #         file.write(f'Total signal to noise ratio in decibels for 0 - {sampFreq/2} Hz band:\n Uno: {unoAvgIntdB} dB\n Dos: {dosAvgIntdB} dB\n Tres: {tresAvgIntdB} dB')
 
-# SNR vs window width sweep per detector
+# SNR vs window width sweep per detector, thank you copilot :)
 print('Computing SNR vs window width...')
 
 # get snr band
@@ -282,7 +302,14 @@ for name, d in detectors.items():
     snr_curve = []
     for cand in candidate_widths:
         cand_half = int(cand * sampFreq)
-        eVolt, nVolt = cleaner.windowMaker(d['volt'], d['eventIdx'], cand_half)
+        if d['clickBool'] == True:
+            eVolt, nVolt = cleaner.windowMaker(d['volt'], d['eventIdx'], cand_half)
+        elif d['clickBool'] == False:
+            eVolt, nVolt = cleaner.windowMaker(d['volt'], d['statEventIdx'], cand_half)
+        else:
+            print(f'Clicker bool not set for detector {name}, goodbye :3')
+            sys.exit(1)
+
         eDown = prod.downSamp(eVolt)
         nDown = prod.downSamp(nVolt)
         ePSDs, eFs = prod.makePSD(eDown)
