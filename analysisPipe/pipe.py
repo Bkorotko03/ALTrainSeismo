@@ -51,9 +51,9 @@ cleaner.halfWIndex = halfWIndex
 cleaner.defVoltCon = voltCon
 
 # get file names for this run
-unoFName = inter._get_str(f"Enter file *name* for UNO in UNO output path: ",'unoTest.CSV')
-dosFName = inter._get_str(f"Enter file *name* for DOS in DOS output path: ",'dosTest.CSV')
-tresFName = inter._get_str(f"Enter file *name* for TRES in TRES output path: ",'tresTest.CSV')
+unoFName = inter._get_str(f"Enter file *name* for UNO in UNO output path: ",'concurrentUNO2.CSV')
+dosFName = inter._get_str(f"Enter file *name* for DOS in DOS output path: ",'concurrentDOS2.CSV')
+tresFName = inter._get_str(f"Enter file *name* for TRES in TRES output path: ",'concurrentTRES2.CSV')
 
 unoPath = f'../SDCardOut/uno/{unoFName}'
 dosPath = f'../SDCardOut/dos/{dosFName}'
