@@ -24,9 +24,10 @@ plt.rcParams['ytick.minor.visible'] = True
 plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
 plt.rcParams['font.serif'] = 'DejaVu Sans'
+plt.rcParams['figure.autolayout'] = True
 
 # for saving figures
-plt.rcParams['figure.figsize'] = (6,4)
+plt.rcParams['figure.figsize'] = (5,4)
 plt.rcParams["figure.dpi"] = 300
 
 # set up initial globals, these will shortly be replaced by interaction
@@ -89,8 +90,19 @@ os.makedirs(figOut,exist_ok=True)
 
 print('Extracting arrays from CSVs...')
 
+# convert clicker csv to array of seconds
+eventSecs = cleaner.utcSecondsConv(clickerPath)
+
+# need to align data, lets use first and last clicks as common endpoints
+# still have the option to statistically test for dos/tres events
+# however, if after alignment the clicked and stat indexed events don't align frequency wise, then dos/tres aren't hearing the same things that uno is...
+
+runStart = eventSecs.min()
+runStop = eventSecs.max()
+
 for name,d in detectors.items():
-    d['secs'],d['sens'],d['volt'] = cleaner.arrayExtract(d['path'])
+    d['secs'],d['sens'],d['volt'] = cleaner.arrayExtract(d['path'],runStart=runStart,runStop=runStop)
+
     print(f'{name} arrays extracted')
 
 print('Plotting raw voltages...')
@@ -107,8 +119,6 @@ plt.savefig(f'{figOut}/rawSignal.png')
 plt.close()
 
 print('Starting windowing...')
-# convert clicker csv to array of seconds
-eventSecs = cleaner.utcSecondsConv(clickerPath)
 
 # create indexes from these times
 for name,d in detectors.items():
@@ -124,7 +134,7 @@ for name,d in detectors.items():
     elif d['clickBool'] == False:
         d['statEventIdx'] = []
         for i in range(len(d['volt'])):
-            if (d['volt'][i] <= np.percentile(d['volt'],0.1)) or (d['volt'][i] >= np.percentile(d['volt'],99.9)):
+            if (d['volt'][i] <= np.percentile(d['volt'],0.05)) or (d['volt'][i] >= np.percentile(d['volt'],99.95)):
                 d['statEventIdx'].append(i)
         
         d['eventVolt'],d['noiseVolt'] = cleaner.windowMaker(d['volt'],d['statEventIdx'],halfWIndex)
@@ -160,6 +170,87 @@ for name,d in detectors.items():
     plt.title(f'{name.capitalize()} Noise Voltage Curves')
     plt.savefig(f'{figOut}/{name}NoiseVolt.png')
     plt.close()
+
+# we should know how good of a job our window inference is doing, tho this is a really basic stat test
+# full treatment is probably some bayesian thing taking the uno event PSDs as a prior and looking for significant windows with a similar shape
+# individual differences make this difficult tho
+
+print('Comparing stat vs click window overlap...')
+
+with open(f'{figOut}/windowOverlap.txt', 'w') as f:
+    for name, d in detectors.items():
+        if not d['clickBool']:
+            continue
+
+        # compute stat windows for this detector too
+        statIdx = np.array([i for i in range(len(d['volt']))
+                            if d['volt'][i] <= np.percentile(d['volt'], 0.1)
+                            or d['volt'][i] >= np.percentile(d['volt'], 99.9)])
+
+        if len(statIdx) == 0:
+            f.write(f'{name}: no stat events found\n')
+            continue
+
+        statSet = set(statIdx)
+        clickHits = 0  # click windows that contain >= 1 stat detection
+        statHits = 0   # stat detections that fall inside a click window
+
+        for idx in d['eventIdx']:
+            low = max(0, int(idx - halfWIndex))
+            high = min(len(d['volt']) - 1, int(idx + halfWIndex))
+            if statSet & set(range(low, high + 1)):
+                clickHits += 1
+
+        clickWindowSet = set()
+        for idx in d['eventIdx']:
+            low = max(0, int(idx - halfWIndex))
+            high = min(len(d['volt']) - 1, int(idx + halfWIndex))
+            clickWindowSet.update(range(low, high + 1))
+
+        statHits = len(statSet & clickWindowSet)
+
+        f.write(f'{name}:\n')
+        f.write(f'  Click windows with >= 1 stat hit: {clickHits}/{len(d["eventIdx"])} ({100*clickHits/len(d["eventIdx"]):.1f}%)\n')
+        f.write(f'  Stat detections inside click windows: {statHits}/{len(statIdx)} ({100*statHits/len(statIdx):.1f}%)\n\n')
+        print(f'{name}: {clickHits}/{len(d["eventIdx"])} click windows hit, {statHits}/{len(statIdx)} stat detections in click windows')
+
+# compare dos/tres stat events against uno click windows
+refName = next(name for name, d in detectors.items() if d['clickBool'])
+refD = detectors[refName]
+
+refClickWindowSet = set()
+for idx in refD['eventIdx']:
+    low = max(0, int(idx - halfWIndex))
+    high = min(len(refD['volt']) - 1, int(idx + halfWIndex))
+    refClickWindowSet.update(range(low, high + 1))
+
+with open(f'{figOut}/windowOverlap.txt', 'a') as f:
+    f.write(f'\n--- Stat event overlap vs {refName} click windows ---\n')
+    for name, d in detectors.items():
+        if d['clickBool']:
+            continue
+        if 'statEventIdx' not in d or len(d['statEventIdx']) == 0:
+            f.write(f'{name}: no stat events\n')
+            continue
+
+        statSet = set(d['statEventIdx'])
+        statHits = len(statSet & refClickWindowSet)
+        pct = 100 * statHits / len(statSet)
+
+        # how many of ref's click windows contain >= 1 stat hit from this detector
+        clickHits = 0
+        for idx in refD['eventIdx']:
+            low = max(0, int(idx - halfWIndex))
+            high = min(len(refD['volt']) - 1, int(idx + halfWIndex))
+            if statSet & set(range(low, high + 1)):
+                clickHits += 1
+
+        f.write(f'{name}:\n')
+        f.write(f'  Stat detections inside {refName} click windows: {statHits}/{len(statSet)} ({pct:.1f}%)\n')
+        f.write(f'  {refName} click windows with >= 1 {name} stat hit: {clickHits}/{len(refD["eventIdx"])} ({100*clickHits/len(refD["eventIdx"]):.1f}%)\n\n')
+        print(f'{name} vs {refName}: {statHits}/{len(statSet)} stat hits in click windows, {clickHits}/{len(refD["eventIdx"])} click windows triggered')
+
+
 
 print('Downsampling...')
 # apply downsampling for PSD prod
@@ -343,7 +434,7 @@ plt.axvline(winHalfWidth, color='r', linestyle='--', label=f'chosen = {winHalfWi
     #     plt.axvline(best_width, color='g', linestyle='--', label=f'optimal = {best_width} s')
 plt.xlabel('Window half-width (s)')
 plt.ylabel('SNR (dB)')
-plt.title(f'{name.capitalize()} SNR vs Window Width ({snr_band[0]}-{snr_band[1]} Hz)')
+plt.title(f'SNR vs Window Width ({snr_band[0]}-{snr_band[1]} Hz)')
 plt.legend()
 plt.savefig(f'{figOut}/SNRvsWindow.png')
 plt.close()

@@ -1,0 +1,10 @@
+uno:
+  Click windows with >= 1 stat hit: 44/62 (71.0%)
+  Stat detections inside click windows: 132/132 (100.0%)
+
+
+--- Stat event overlap vs uno click windows ---
+tres:
+  Stat detections inside uno click windows: 36/67 (53.7%)
+  uno click windows with >= 1 tres stat hit: 25/62 (40.3%)
+

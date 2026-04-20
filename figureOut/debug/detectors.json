@@ -1,0 +1,16 @@
+{
+  "uno": {
+    "path": "../SDCardOut/uno/concurrentUNO3.CSV",
+    "noMagPath": "../SDCardOut/uno/noMagFullUNO.CSV",
+    "clickBool": true,
+    "bestWinHalfWidth": 1.0,
+    "bestSNRdB": 13.127463918519087
+  },
+  "tres": {
+    "path": "../SDCardOut/tres/concurrentTRES3.CSV",
+    "noMagPath": "../SDCardOut/tres/noMagFullTRES.CSV",
+    "clickBool": false,
+    "bestWinHalfWidth": 1.0,
+    "bestSNRdB": 3.9311477946497764
+  }
+}
