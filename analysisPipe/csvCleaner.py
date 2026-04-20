@@ -10,20 +10,29 @@ halfWIndex = window_half_width * sampFreq
 defVoltCon = 5/16383
 
 # extract big numpy arrays from csv files
-def arrayExtract(fpath,voltCon=defVoltCon,endCut=120,fs=100):# this cuts 2 minutes off of the end of each run, need to be long now
+def arrayExtract(fpath,runStart=None,runStop=None,voltCon=defVoltCon,endCut=120,fs=100):# this cuts 2 minutes off of the end of each run, need to be long now
     # import csv and prep colums
     DF = pd.read_csv(fpath)
     DF['seconds'] = pd.to_numeric(DF['seconds'],errors='coerce')
     DF['sensor'] = pd.to_numeric(DF['sensor'],errors='coerce')
     DF = DF.dropna(subset=['seconds']).reset_index(drop=True) # kill rows with nans
 
-    # now want to make chops off ends
-    endIdx = endCut*fs # endCut in seconds, fs in Hz
     DFSecs = DF['seconds'].to_numpy(dtype=float)
-    DFSecs = DFSecs[endIdx:-endIdx]
     DFSens = DF['sensor'].to_numpy(dtype=float)
-    DFSens = DFSens[endIdx:-endIdx]
+
+    # now want to make chops off ends
+    if runStart == None and runStop == None:
+        endIdx = endCut*fs # endCut in seconds, fs in Hz
+        DFSecs = DFSecs[endIdx:-endIdx]
+        DFSens = DFSens[endIdx:-endIdx]
+    
+    else:
+        runMask = (DFSecs >= runStart) & (DFSecs <= runStop)
+        DFSecs = DFSecs[runMask]
+        DFSens = DFSens[runMask]
+
     DFVolt = DFSens * voltCon
+
 
     return DFSecs,DFSens,DFVolt
 
