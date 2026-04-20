@@ -175,80 +175,83 @@ for name,d in detectors.items():
 # full treatment is probably some bayesian thing taking the uno event PSDs as a prior and looking for significant windows with a similar shape
 # individual differences make this difficult tho
 
-print('Comparing stat vs click window overlap...')
+# below are two copilot generated functions for personal testing of stat windowing
+# did not produce meaningful metrics, comment out for quicker runs
 
-with open(f'{figOut}/windowOverlap.txt', 'w') as f:
-    for name, d in detectors.items():
-        if not d['clickBool']:
-            continue
+# print('Comparing stat vs click window overlap...')
 
-        # compute stat windows for this detector too
-        statIdx = np.array([i for i in range(len(d['volt']))
-                            if d['volt'][i] <= np.percentile(d['volt'], 0.1)
-                            or d['volt'][i] >= np.percentile(d['volt'], 99.9)])
+# with open(f'{figOut}/windowOverlap.txt', 'w') as f:
+#     for name, d in detectors.items():
+#         if not d['clickBool']:
+#             continue
 
-        if len(statIdx) == 0:
-            f.write(f'{name}: no stat events found\n')
-            continue
+#         # compute stat windows for this detector too
+#         statIdx = np.array([i for i in range(len(d['volt']))
+#                             if d['volt'][i] <= np.percentile(d['volt'], 0.1)
+#                             or d['volt'][i] >= np.percentile(d['volt'], 99.9)])
 
-        statSet = set(statIdx)
-        clickHits = 0  # click windows that contain >= 1 stat detection
-        statHits = 0   # stat detections that fall inside a click window
+#         if len(statIdx) == 0:
+#             f.write(f'{name}: no stat events found\n')
+#             continue
 
-        for idx in d['eventIdx']:
-            low = max(0, int(idx - halfWIndex))
-            high = min(len(d['volt']) - 1, int(idx + halfWIndex))
-            if statSet & set(range(low, high + 1)):
-                clickHits += 1
+#         statSet = set(statIdx)
+#         clickHits = 0  # click windows that contain >= 1 stat detection
+#         statHits = 0   # stat detections that fall inside a click window
 
-        clickWindowSet = set()
-        for idx in d['eventIdx']:
-            low = max(0, int(idx - halfWIndex))
-            high = min(len(d['volt']) - 1, int(idx + halfWIndex))
-            clickWindowSet.update(range(low, high + 1))
+#         for idx in d['eventIdx']:
+#             low = max(0, int(idx - halfWIndex))
+#             high = min(len(d['volt']) - 1, int(idx + halfWIndex))
+#             if statSet & set(range(low, high + 1)):
+#                 clickHits += 1
 
-        statHits = len(statSet & clickWindowSet)
+#         clickWindowSet = set()
+#         for idx in d['eventIdx']:
+#             low = max(0, int(idx - halfWIndex))
+#             high = min(len(d['volt']) - 1, int(idx + halfWIndex))
+#             clickWindowSet.update(range(low, high + 1))
 
-        f.write(f'{name}:\n')
-        f.write(f'  Click windows with >= 1 stat hit: {clickHits}/{len(d["eventIdx"])} ({100*clickHits/len(d["eventIdx"]):.1f}%)\n')
-        f.write(f'  Stat detections inside click windows: {statHits}/{len(statIdx)} ({100*statHits/len(statIdx):.1f}%)\n\n')
-        print(f'{name}: {clickHits}/{len(d["eventIdx"])} click windows hit, {statHits}/{len(statIdx)} stat detections in click windows')
+#         statHits = len(statSet & clickWindowSet)
 
-# compare dos/tres stat events against uno click windows
-refName = next(name for name, d in detectors.items() if d['clickBool'])
-refD = detectors[refName]
+#         f.write(f'{name}:\n')
+#         f.write(f'  Click windows with >= 1 stat hit: {clickHits}/{len(d["eventIdx"])} ({100*clickHits/len(d["eventIdx"]):.1f}%)\n')
+#         f.write(f'  Stat detections inside click windows: {statHits}/{len(statIdx)} ({100*statHits/len(statIdx):.1f}%)\n\n')
+#         print(f'{name}: {clickHits}/{len(d["eventIdx"])} click windows hit, {statHits}/{len(statIdx)} stat detections in click windows')
 
-refClickWindowSet = set()
-for idx in refD['eventIdx']:
-    low = max(0, int(idx - halfWIndex))
-    high = min(len(refD['volt']) - 1, int(idx + halfWIndex))
-    refClickWindowSet.update(range(low, high + 1))
+# # compare dos/tres stat events against uno click windows
+# refName = next(name for name, d in detectors.items() if d['clickBool'])
+# refD = detectors[refName]
 
-with open(f'{figOut}/windowOverlap.txt', 'a') as f:
-    f.write(f'\n--- Stat event overlap vs {refName} click windows ---\n')
-    for name, d in detectors.items():
-        if d['clickBool']:
-            continue
-        if 'statEventIdx' not in d or len(d['statEventIdx']) == 0:
-            f.write(f'{name}: no stat events\n')
-            continue
+# refClickWindowSet = set()
+# for idx in refD['eventIdx']:
+#     low = max(0, int(idx - halfWIndex))
+#     high = min(len(refD['volt']) - 1, int(idx + halfWIndex))
+#     refClickWindowSet.update(range(low, high + 1))
 
-        statSet = set(d['statEventIdx'])
-        statHits = len(statSet & refClickWindowSet)
-        pct = 100 * statHits / len(statSet)
+# with open(f'{figOut}/windowOverlap.txt', 'a') as f:
+#     f.write(f'\n--- Stat event overlap vs {refName} click windows ---\n')
+#     for name, d in detectors.items():
+#         if d['clickBool']:
+#             continue
+#         if 'statEventIdx' not in d or len(d['statEventIdx']) == 0:
+#             f.write(f'{name}: no stat events\n')
+#             continue
 
-        # how many of ref's click windows contain >= 1 stat hit from this detector
-        clickHits = 0
-        for idx in refD['eventIdx']:
-            low = max(0, int(idx - halfWIndex))
-            high = min(len(refD['volt']) - 1, int(idx + halfWIndex))
-            if statSet & set(range(low, high + 1)):
-                clickHits += 1
+#         statSet = set(d['statEventIdx'])
+#         statHits = len(statSet & refClickWindowSet)
+#         pct = 100 * statHits / len(statSet)
 
-        f.write(f'{name}:\n')
-        f.write(f'  Stat detections inside {refName} click windows: {statHits}/{len(statSet)} ({pct:.1f}%)\n')
-        f.write(f'  {refName} click windows with >= 1 {name} stat hit: {clickHits}/{len(refD["eventIdx"])} ({100*clickHits/len(refD["eventIdx"]):.1f}%)\n\n')
-        print(f'{name} vs {refName}: {statHits}/{len(statSet)} stat hits in click windows, {clickHits}/{len(refD["eventIdx"])} click windows triggered')
+#         # how many of ref's click windows contain >= 1 stat hit from this detector
+#         clickHits = 0
+#         for idx in refD['eventIdx']:
+#             low = max(0, int(idx - halfWIndex))
+#             high = min(len(refD['volt']) - 1, int(idx + halfWIndex))
+#             if statSet & set(range(low, high + 1)):
+#                 clickHits += 1
+
+#         f.write(f'{name}:\n')
+#         f.write(f'  Stat detections inside {refName} click windows: {statHits}/{len(statSet)} ({pct:.1f}%)\n')
+#         f.write(f'  {refName} click windows with >= 1 {name} stat hit: {clickHits}/{len(refD["eventIdx"])} ({100*clickHits/len(refD["eventIdx"]):.1f}%)\n\n')
+#         print(f'{name} vs {refName}: {statHits}/{len(statSet)} stat hits in click windows, {clickHits}/{len(refD["eventIdx"])} click windows triggered')
 
 
 
