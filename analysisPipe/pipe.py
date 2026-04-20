@@ -338,15 +338,15 @@ for name, d in detectors.items():
         d['bestSNRdB'] = None
 
     plt.plot(candidate_widths, snr_curve)
-    plt.axvline(winHalfWidth, color='r', linestyle='--', label=f'chosen = {winHalfWidth} s')
-    if valid.any():
-        plt.axvline(best_width, color='g', linestyle='--', label=f'optimal = {best_width} s')
-    plt.xlabel('Window half-width (s)')
-    plt.ylabel('SNR (dB)')
-    plt.title(f'{name.capitalize()} SNR vs Window Width ({snr_band[0]}-{snr_band[1]} Hz)')
-    plt.legend()
-    plt.savefig(f'{figOut}/{name}SNRvsWindow.png')
-    plt.close()
+plt.axvline(winHalfWidth, color='r', linestyle='--', label=f'chosen = {winHalfWidth} s')
+    # if valid.any():
+    #     plt.axvline(best_width, color='g', linestyle='--', label=f'optimal = {best_width} s')
+plt.xlabel('Window half-width (s)')
+plt.ylabel('SNR (dB)')
+plt.title(f'{name.capitalize()} SNR vs Window Width ({snr_band[0]}-{snr_band[1]} Hz)')
+plt.legend()
+plt.savefig(f'{figOut}/SNRvsWindow.png')
+plt.close()
 
 # output detectors dict as json (strip numpy arrays, keep scalar metadata)
 import json
